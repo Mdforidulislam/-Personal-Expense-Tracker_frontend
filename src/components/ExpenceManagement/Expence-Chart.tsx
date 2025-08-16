@@ -18,7 +18,7 @@ const categoryColors = {
 
 export default function ExpenseChart({ expenses }: ExpenseChartProps) {
   const chartData = useMemo(() => {
-    const categoryTotals = expenses.reduce(
+    const categoryTotals = expenses?.reduce(
       (acc, expense) => {
         acc[expense.category] = (acc[expense.category] || 0) + expense.amount
         return acc
@@ -26,9 +26,9 @@ export default function ExpenseChart({ expenses }: ExpenseChartProps) {
       {} as Record<string, number>,
     )
 
-    const total = Object.values(categoryTotals).reduce((sum, amount) => sum + amount, 0)
+    const total = Object?.values(categoryTotals)?.reduce((sum, amount) => sum + amount, 0)
 
-    return Object.entries(categoryTotals).map(([category, amount]) => ({
+    return Object?.entries(categoryTotals)?.map(([category, amount]) => ({
       category,
       amount,
       percentage: total > 0 ? (amount / total) * 100 : 0,
@@ -36,16 +36,16 @@ export default function ExpenseChart({ expenses }: ExpenseChartProps) {
     }))
   }, [expenses])
 
-  if (chartData.length === 0) return null
+  if (chartData?.length === 0) return null
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
-      const data = payload[0].payload
+      const data = payload[0]?.payload
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-medium text-gray-900">{data.category}</p>
+          <p className="font-medium text-gray-900">{data?.category}</p>
           <p className="text-sm text-gray-600">
-            ${data.amount.toFixed(2)} ({data.percentage.toFixed(1)}%)
+            ${data?.amount.toFixed(2)} ({data?.percentage.toFixed(1)}%)
           </p>
         </div>
       )
@@ -72,15 +72,15 @@ export default function ExpenseChart({ expenses }: ExpenseChartProps) {
                   paddingAngle={2}
                   dataKey="amount"
                 >
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  {chartData?.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry?.color} />
                   ))}
                 </Pie>
                 <Tooltip content={<CustomTooltip />} />
                 <Legend
                   formatter={(value, entry) => (
-                    <span style={{ color: entry.color }}>
-                      {value} (${entry.payload.amount.toFixed(2)})
+                    <span style={{ color: entry?.color }}>
+                      {value} (${entry?.payload?.value.toFixed(2)})
                     </span>
                   )}
                 />

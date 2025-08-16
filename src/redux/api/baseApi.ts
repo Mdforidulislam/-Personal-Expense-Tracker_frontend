@@ -9,10 +9,10 @@ import { RootState } from "../store";
 import { logout, setAccessToken } from "../features/auth";
 
 const baseQuery = fetchBaseQuery({
-  // baseUrl: "https://pamelam.code-commando.com/api",
+  baseUrl: "https://personal-expense-tracker-backend-1-5pou.onrender.com/api/v1",
   // baseUrl: "https://roof-cost.onrender.com/api/v1",
   // baseUrl: "https://arcroofs.com/api/v1",
-  baseUrl: "http://localhost:5000/api/v1",
+  // baseUrl: "http://localhost:5000/api/v1",
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as RootState).auth?.accessToken;
     if (token) {

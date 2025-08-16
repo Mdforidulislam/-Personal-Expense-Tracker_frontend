@@ -1,10 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import ExpenseForm from "./ExpenceForm";
-import ExpenseStats from "./Expence-Status";
-import ExpenseChart from "./Expence-Chart";
-import ExpenseList from "./Expence-List";
 
 import {
   useCreateExpenseMutation,
@@ -12,39 +8,44 @@ import {
   useGetExpensesQuery,
   useUpdateExpenseMutation,
 } from "@/redux/service/expence/expenceApi";
-import { useGetProfileQueryQuery } from "@/redux/service/auth/authApi";
+import ExpenseChart from "./Expence-Chart";
+import ExpenseStats from "./Expence-Status";
+import ExpenseList from "./Expence-List";
+import ExpenseForm from "./ExpenceForm";
 
 export interface Expense {
   id: string;
   title: string;
   amount: number;
-  category: "Food" | "Transport" | "Shopping" | "Others";
+  category: any;
+  type: "INCOME" | "EXPENSE";
+  method: string;
+  userId: string;
   date: string;
   createdAt: string;
+  updatedAt: string;
 }
+
 
 export default function ExpenseTracker() {
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
-  const [filterCategory, setFilterCategory] = useState<string>("all");
-  const [dateRange, setDateRange] = useState({ start: "", end: "" });
+  const [filterCategory, setFilterCategory] = useState<"all" | Expense["category"]>("all");
+  const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: "", end: "" });
 
   // RTK Query hooks
-  const { data: expensesData, isLoading } = useGetExpensesQuery({});
+  const { data: expensesData, isLoading } = useGetExpensesQuery({page:2});
   const [createExpense] = useCreateExpenseMutation();
-  const [updateExpense] = useUpdateExpenseMutation();
+  const [updateExpense] = useUpdateExpenseMutation()
   const [deleteExpense] = useDeleteExpenseMutation();
-  const { data: userData } = useGetProfileQueryQuery({});
 
-  console.log(userData);
-
-  const expenses = expensesData?.data || [];
+  const expenses: Expense[] = expensesData?.data || [];
 
   // Add new expense
   const addExpense = async (expenseData: Omit<Expense, "id" | "createdAt">) => {
     try {
       await createExpense({
         ...expenseData,
-        date: new Date(expenseData.date).toISOString(), // convert to ISO
+        date: new Date(expenseData.date).toISOString(),
       }).unwrap();
     } catch (error) {
       console.error("Error adding expense:", error);
@@ -52,17 +53,14 @@ export default function ExpenseTracker() {
   };
 
   // Update existing expense
-  const handleUpdateExpense = async (
-    id: string,
-    expenseData: Omit<Expense, "id" | "createdAt">
-  ) => {
+  const handleUpdateExpense = async (id: string, expenseData: Omit<Expense, "id" | "createdAt">) => {
     try {
       await updateExpense({
         id,
         body: {
           ...expenseData,
           date: new Date(expenseData.date).toISOString(),
-        }, // convert to ISO
+        },
       }).unwrap();
       setEditingExpense(null);
     } catch (error) {
@@ -80,12 +78,10 @@ export default function ExpenseTracker() {
   };
 
   // Filter expenses by category and date
-  const filteredExpenses = expenses?.filter((expense) => {
-    const categoryMatch =
-      filterCategory === "all" || expense.category === filterCategory;
+  const filteredExpenses: Expense[] = expenses.filter((expense) => {
+    const categoryMatch = filterCategory === "all" || expense.category === filterCategory;
     const dateMatch =
-      (!dateRange.start ||
-        expense.date >= new Date(dateRange.start).toISOString()) &&
+      (!dateRange.start || expense.date >= new Date(dateRange.start).toISOString()) &&
       (!dateRange.end || expense.date <= new Date(dateRange.end).toISOString());
     return categoryMatch && dateMatch;
   });
@@ -106,9 +102,7 @@ export default function ExpenseTracker() {
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <header className="flex justify-between items-center mb-8">
           <div className="text-center flex-1">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
-              Expense Tracker
-            </h1>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">Expense Tracker</h1>
             <p className="text-gray-600">Track your expenses efficiently</p>
           </div>
         </header>
@@ -117,12 +111,8 @@ export default function ExpenseTracker() {
           {/* Left Column - Form */}
           <div className="lg:col-span-1">
             <ExpenseForm
-              onSubmit={
-                editingExpense
-                  ? (data) => handleUpdateExpense(editingExpense.id, data)
-                  : addExpense
-              }
-              initialData={editingExpense}
+              onSubmit={editingExpense ? (data) => handleUpdateExpense(editingExpense.id, data) : addExpense}
+              initialData={editingExpense || undefined}
               isEditing={!!editingExpense}
               onCancel={() => setEditingExpense(null)}
             />
@@ -131,9 +121,7 @@ export default function ExpenseTracker() {
           {/* Right Column - Stats and List */}
           <div className="lg:col-span-2 space-y-6">
             <ExpenseStats expenses={filteredExpenses} />
-
-            {expenses?.length > 0 && <ExpenseChart expenses={expenses} />}
-
+            {filteredExpenses.length > 0 && <ExpenseChart expenses={filteredExpenses} />}
             <ExpenseList
               expenses={filteredExpenses}
               onEdit={setEditingExpense}

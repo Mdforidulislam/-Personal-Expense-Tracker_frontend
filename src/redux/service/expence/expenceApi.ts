@@ -1,24 +1,24 @@
-// redux/service/expenses/expensesApi.ts
-
 import baseApi from "@/redux/api/baseApi";
 
+// ----- Expense Types -----
 export interface Expense {
   id: string;
   title: string;
   amount: number;
-  category: string;
-  date: string;
+  category: "Food" | "Transport" | "Shopping" | "Others" | string;
   type: "INCOME" | "EXPENSE";
   method: string;
   userId: string;
+  date: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface ExpenseResponse {
+// API response for list or single expense
+export interface ExpenseResponse<T = Expense | Expense[]> {
   success: boolean;
   message: string;
-  data: Expense | Expense[];
+  data: T;
   meta?: {
     page: number;
     limit: number;
@@ -27,44 +27,37 @@ export interface ExpenseResponse {
   };
 }
 
+// ----- Expenses API -----
 export const expensesApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    // Get all expenses
-    getExpenses: builder.query<
-      ExpenseResponse,
-      { page?: number; limit?: number }
-    >({
+    // Get all expenses (paginated)
+    getExpenses: builder.query<ExpenseResponse<Expense[]>, { page?: number; limit?: number }>({
       query: ({ page = 1, limit = 10 }) => ({
-        url: `/expenses`,
+        url: "/expenses",
         method: "GET",
         params: { page, limit },
       }),
     }),
 
-    // Get dashboard expenses
-    getDashboardExpenses: builder.query<ExpenseResponse, void>({
-      query: () => ({ url: "/expenses/dashboard", method: "GET" }),
-    }),
-
-    // Get single expense
-    getExpenseById: builder.query<ExpenseResponse, string>({
-      query: (id) => ({ url: `/expenses/${id}`, method: "POST" }),
+    // Get single expense by ID
+    getExpenseById: builder.query<ExpenseResponse<Expense>, string>({
+      query: (id) => ({
+        url: `/expenses/${id}`,
+        method: "GET",
+      }),
     }),
 
     // Create a new expense
-    createExpense: builder.mutation<ExpenseResponse, Partial<Expense>>({
+    createExpense: builder.mutation<ExpenseResponse<Expense>, Partial<Expense>>({
       query: (body) => ({
-        url: `/expenses`,
+        url: "/expenses",
         method: "POST",
         body,
       }),
     }),
 
     // Update an expense
-    updateExpense: builder.mutation<
-      ExpenseResponse,
-      { id: string; body: Partial<Expense> }
-    >({
+    updateExpense: builder.mutation<ExpenseResponse<Expense>, { id: string; body: Partial<Expense> }>({
       query: ({ id, body }) => ({
         url: `/expenses/${id}`,
         method: "PUT",
@@ -73,7 +66,7 @@ export const expensesApi = baseApi.injectEndpoints({
     }),
 
     // Delete an expense
-    deleteExpense: builder.mutation<ExpenseResponse, string>({
+    deleteExpense: builder.mutation<ExpenseResponse<{ id: string }>, string>({
       query: (id) => ({
         url: `/expenses/${id}`,
         method: "DELETE",
@@ -83,10 +76,9 @@ export const expensesApi = baseApi.injectEndpoints({
   overrideExisting: false,
 });
 
-// Export hooks
+// ----- Export Hooks -----
 export const {
   useGetExpensesQuery,
-  useGetDashboardExpensesQuery,
   useGetExpenseByIdQuery,
   useCreateExpenseMutation,
   useUpdateExpenseMutation,
