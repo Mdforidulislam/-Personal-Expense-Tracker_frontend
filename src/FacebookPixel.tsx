@@ -2,8 +2,8 @@
 // components/FacebookPixel.tsx
 'use client';
 
+import Image from 'next/image';
 import { useEffect } from 'react';
-
 declare global {
   interface Window {
     fbq?: Fbq;
@@ -54,12 +54,13 @@ export default function FacebookPixel() {
 
   return (
     <noscript>
-      <img
-        height="1"
-        width="1"
-        style={{ display: 'none' }}
-        src="https://www.facebook.com/tr?id=720061294011638&ev=PageView&noscript=1"
-      />
+  <Image
+    height={1}
+    width={1}
+    style={{ display: "none" }}
+    src="https://www.facebook.com/tr?id=720061294011638&ev=PageView&noscript=1"
+    alt=""
+  />
     </noscript>
   );
 }

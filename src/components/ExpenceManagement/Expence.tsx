@@ -13,11 +13,15 @@ import ExpenseStats from "./Expence-Status";
 import ExpenseList from "./Expence-List";
 import ExpenseForm from "./ExpenceForm";
 
+// Category type
+export type Category = "Food" | "Transport" | "Shopping" | "Others";
+
+// Expense interface
 export interface Expense {
   id: string;
   title: string;
   amount: number;
-  category: any;
+  category: Category;
   type: "INCOME" | "EXPENSE";
   method: string;
   userId: string;
@@ -26,22 +30,25 @@ export interface Expense {
   updatedAt: string;
 }
 
-
 export default function ExpenseTracker() {
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
-  const [filterCategory, setFilterCategory] = useState<"all" | Expense["category"]>("all");
-  const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: "", end: "" });
+  const [filterCategory, setFilterCategory] = useState<Category>("Shopping");
+  const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
+    start: "",
+    end: "",
+  });
 
   // RTK Query hooks
-  const { data: expensesData, isLoading } = useGetExpensesQuery({page:2});
+  const { data: expensesData, isLoading } = useGetExpensesQuery({ page: 1, limit: 100 });
   const [createExpense] = useCreateExpenseMutation();
-  const [updateExpense] = useUpdateExpenseMutation()
+  const [updateExpense] = useUpdateExpenseMutation();
   const [deleteExpense] = useDeleteExpenseMutation();
 
-  const expenses: Expense[] = expensesData?.data || [];
+  // Use API response
+  const expenses: Expense[] = (expensesData?.data as Expense[]) || [];
 
   // Add new expense
-  const addExpense = async (expenseData: Omit<Expense, "id" | "createdAt">) => {
+  const addExpense = async (expenseData: Omit<Expense, "id" | "createdAt" | "updatedAt">) => {
     try {
       await createExpense({
         ...expenseData,
@@ -53,7 +60,10 @@ export default function ExpenseTracker() {
   };
 
   // Update existing expense
-  const handleUpdateExpense = async (id: string, expenseData: Omit<Expense, "id" | "createdAt">) => {
+  const handleUpdateExpense = async (
+    id: string,
+    expenseData: Omit<Expense, "id" | "createdAt" | "updatedAt">
+  ) => {
     try {
       await updateExpense({
         id,
@@ -79,7 +89,7 @@ export default function ExpenseTracker() {
 
   // Filter expenses by category and date
   const filteredExpenses: Expense[] = expenses.filter((expense) => {
-    const categoryMatch = filterCategory === "all" || expense.category === filterCategory;
+    const categoryMatch = filterCategory === "Shopping" || expense.category === filterCategory;
     const dateMatch =
       (!dateRange.start || expense.date >= new Date(dateRange.start).toISOString()) &&
       (!dateRange.end || expense.date <= new Date(dateRange.end).toISOString());
@@ -111,7 +121,11 @@ export default function ExpenseTracker() {
           {/* Left Column - Form */}
           <div className="lg:col-span-1">
             <ExpenseForm
-              onSubmit={editingExpense ? (data) => handleUpdateExpense(editingExpense.id, data) : addExpense}
+              onSubmit={
+                editingExpense
+                  ? (data) => handleUpdateExpense(editingExpense.id, data)
+                  : addExpense
+              }
               initialData={editingExpense || undefined}
               isEditing={!!editingExpense}
               onCancel={() => setEditingExpense(null)}
@@ -119,7 +133,7 @@ export default function ExpenseTracker() {
           </div>
 
           {/* Right Column - Stats and List */}
-          <div className="lg:col-span-2 space-y-6">
+          {/* <div className="lg:col-span-2 space-y-6">
             <ExpenseStats expenses={filteredExpenses} />
             {filteredExpenses.length > 0 && <ExpenseChart expenses={filteredExpenses} />}
             <ExpenseList
@@ -127,11 +141,13 @@ export default function ExpenseTracker() {
               onEdit={setEditingExpense}
               onDelete={handleDeleteExpense}
               filterCategory={filterCategory}
-              onFilterChange={setFilterCategory}
               dateRange={dateRange}
               onDateRangeChange={setDateRange}
-            />
-          </div>
+              onFilterChange={{
+
+              }}
+              />
+          </div> */}
         </div>
       </div>
     </div>
